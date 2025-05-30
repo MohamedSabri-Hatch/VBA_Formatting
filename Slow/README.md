@@ -9,4 +9,4 @@ This document is to maintain naming conventions and easily refer back to whichev
   - v2 code will focus on implementing column width changes
   - v3 fixes bolding
   - v4 add periods to the end of comment section
-  - lets hope there's no v5
+  - v5 modularize everything into its own set of functions - main macro to be barebones calling on functions
