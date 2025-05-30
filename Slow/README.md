@@ -2,3 +2,8 @@ This document is to maintain naming conventions and easily refer back to whichev
 
 (EOS) Slow Slow v0 is the most updated and completed version of the code prior to Nicole's comments.
   - All v0 code files are tested updates to the code such as v0.1 with an added column formatting function (doesn't work)
+  - v1 implements efficient row sizing
+  - v2 code will focus on implementing column width changes
+  - v3 fixes bolding
+  - v4 add periods to the end of comment section
+  - lets hope there's no v5
