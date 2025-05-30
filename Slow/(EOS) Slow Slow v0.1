@@ -1,3 +1,4 @@
+' This code occasionally crashes excel
 Sub FormatCPKCTable_Basic_AlignedProperly()
     Application.ScreenUpdating = False
     Application.EnableEvents = False
@@ -267,4 +268,34 @@ Function InsertHeaderOnEachPage(ws As Worksheet, headerRow As Long) As Collectio
 
     Set InsertHeaderOnEachPage = insertedRows
 End Function
+Sub ScaleColumnsToTotalPrintedWidth(targetInches As Double)
+    Dim ws As Worksheet
+    Set ws = ActiveSheet
+
+    Dim col As Long, lastCol As Long
+    Dim totalPoints As Double, scaleFactor As Double
+    Dim colWidths() As Double
+
+    lastCol = ws.UsedRange.Columns(ws.UsedRange.Columns.Count).Column
+    ReDim colWidths(1 To lastCol)
+
+    For col = 1 To lastCol
+        If Application.WorksheetFunction.CountA(ws.Columns(col)) > 0 Then
+            colWidths(col) = ws.Columns(col).ColumnWidth
+            totalPoints = totalPoints + colWidths(col)
+        End If
+    Next col
+
+    If totalPoints = 0 Then Exit Sub
+
+    Dim totalInches As Double
+    totalInches = totalPoints * 7.5 / 72
+    scaleFactor = targetInches / totalInches
+
+    For col = 1 To lastCol
+        If colWidths(col) > 0 Then
+            ws.Columns(col).ColumnWidth = colWidths(col) * scaleFactor
+        End If
+    Next col
+End Sub
 
