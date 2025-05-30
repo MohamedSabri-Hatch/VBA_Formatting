@@ -1,8 +1,4 @@
 Sub FormatCPKCTable_Basic_AlignedProperly()
-    Application.ScreenUpdating = False
-    Application.EnableEvents = False
-    Application.Calculation = xlCalculationManual
-
     Dim ws As Worksheet
     Dim cell As Range, startCell As Range
     Dim col As Long, lastCol As Long
@@ -17,26 +13,19 @@ Sub FormatCPKCTable_Basic_AlignedProperly()
     Dim totalWidth As Double
     Dim mc As Range
     Dim headerEndRow As Long
-
     Set ws = ActiveSheet
-
-    ' Find the header cell starting with "Action"
     For Each cell In ws.UsedRange
         If LCase(Left(Trim(cell.Value), 6)) = "action" Then
             Set startCell = cell
             Exit For
         End If
     Next cell
-
     If startCell Is Nothing Then
         MsgBox "No header starting with 'Action' found."
-        GoTo Cleanup
+        Exit Sub
     End If
-
     rowNum = startCell.Row
-    lastCol = ws.Cells(rowNum, ws.Columns.Count).End(xlToLeft).Column
-
-    ' Format header row
+    lastCol = ws.Cells(rowNum, ws.Columns.count).End(xlToLeft).Column
     For col = startCell.Column - 1 To lastCol
         Set cell = ws.Cells(rowNum, col)
         text = Trim(cell.Value)
@@ -53,23 +42,19 @@ Sub FormatCPKCTable_Basic_AlignedProperly()
             cell.Value = Application.WorksheetFunction.Proper(text)
         End If
     Next col
-
     Call CleanUpHeaderMergedRows(ws, startCell.Row)
-    headerEndRow = startCell.MergeArea.Row + startCell.MergeArea.Rows.Count - 1
+    headerEndRow = startCell.MergeArea.Row + startCell.MergeArea.Rows.count - 1
     Call DeleteBottomRowsOfVerticalMerges(ws, headerEndRow + 1)
-
-    lastRow = ws.Cells(ws.Rows.Count, startCell.Column).End(xlUp).Row
-
-    ' Format body cells
+    lastRow = ws.Cells(ws.Rows.count, startCell.Column).End(xlUp).Row
     For r = headerEndRow + 1 To lastRow
         For c = startCell.Column - 1 To lastCol
             Set cell = ws.Cells(r, c)
+
             text = Trim(Replace(cell.Value, vbLf, " "))
             text = Replace(text, Chr(160), " ")
-            text = Replace(text, ChrW(&H2191), "up")
-            text = Replace(text, ChrW(&H2193), "down")
+            text = Replace(text, "?", "up")
+            text = Replace(text, "?", "down")
             text = Application.WorksheetFunction.Trim(text)
-            cell.Value = text
             currState = ExtractState(text)
             stateWordCount = 0
             If currState <> "" Then stateWordCount = UBound(Split(currState, " ")) + 1
@@ -89,9 +74,10 @@ Sub FormatCPKCTable_Basic_AlignedProperly()
             End With
         Next c
     Next r
-
-    ' Bold state changes
-    For r = headerEndRow + 2 To lastRow
+    For r = headerEndRow + 1 To lastRow
+        If r = headerEndRow + 1 Then
+        r = r + 1
+        End If
         For c = startCell.Column + 1 To lastCol
             currText = CStr(ws.Cells(r, c).Value)
             prevText = CStr(ws.Cells(r - 1, c).Value)
@@ -107,11 +93,6 @@ Sub FormatCPKCTable_Basic_AlignedProperly()
             End If
         Next c
     Next r
-
-    ' ? Scale columns to total 7 inches
-    ' Call ScaleColumnsToTotalPrintedWidth(7)
-
-    ' Adjust row heights based on estimated line count
     For r = headerEndRow + 1 To lastRow
         maxLines = 1
         For c = startCell.Column - 1 To lastCol
@@ -134,10 +115,8 @@ Sub FormatCPKCTable_Basic_AlignedProperly()
                 End If
             End If
         Next c
-        ws.Rows(r).RowHeight = (0.15 + 0.1 * maxLines) * 72
+        ws.Rows(r).RowHeight = (0.3 + 0.1 * maxLines) * 72
     Next r
-
-    ' Insert headers on each page
     Dim insertedHeaders As Collection
     Set insertedHeaders = InsertHeaderOnEachPage(ws, startCell.Row)
     Dim hdrRow As Variant
@@ -151,18 +130,12 @@ Sub FormatCPKCTable_Basic_AlignedProperly()
                 .HorizontalAlignment = xlCenter
                 .VerticalAlignment = xlCenter
                 .WrapText = True
-                ws.Rows(hdrRow).RowHeight = 0.4 * 72
+                ws.Rows(hdrRow).RowHeight = 0.57 * 72
                 ws.Range(ws.Cells(hdrRow, lastCol), ws.Cells(hdrRow, lastCol + 1)).Merge
             End With
         Next col
     Next hdrRow
-
-    MsgBox "Formatting complete: standardized layout, scaled to 7 inches, and optimized."
-
-Cleanup:
-    Application.ScreenUpdating = True
-    Application.EnableEvents = True
-    Application.Calculation = xlCalculationAutomatic
+    MsgBox "Formatting complete: headers styled, conditional alignment applied, vertically merged rows removed, row heights adjusted, and rows highlighted by line count."
 End Sub
 Sub DeleteBottomRowsOfVerticalMerges(ws As Worksheet, startRow As Long)
     Dim cell As Range
@@ -171,7 +144,7 @@ Sub DeleteBottomRowsOfVerticalMerges(ws As Worksheet, startRow As Long)
         If cell.Row >= startRow Then
             If cell.MergeCells Then
                 With cell.MergeArea
-                    mergeRows = .Rows.Count
+                    mergeRows = .Rows.count
                     If mergeRows > 1 Then
                         bottomRow = .Row + mergeRows - 1
                         If bottomRow > cell.Row Then
@@ -185,7 +158,6 @@ Sub DeleteBottomRowsOfVerticalMerges(ws As Worksheet, startRow As Long)
         End If
     Next cell
 End Sub
-
 Sub CleanUpHeaderMergedRows(ws As Worksheet, headerRow As Long)
     Dim cell As Range
     Dim mergeRows As Long, bottomRow As Long
@@ -193,7 +165,7 @@ Sub CleanUpHeaderMergedRows(ws As Worksheet, headerRow As Long)
     For Each cell In ws.Rows(headerRow).Cells
         If cell.MergeCells Then
             With cell.MergeArea
-                mergeRows = .Rows.Count
+                mergeRows = .Rows.count
                 topRow = .Row
                 bottomRow = topRow + mergeRows - 1
                 If mergeRows > 1 Then
@@ -201,24 +173,21 @@ Sub CleanUpHeaderMergedRows(ws As Worksheet, headerRow As Long)
                     ws.Rows((topRow + 1) & ":" & bottomRow).Delete
                     On Error GoTo 0
                 End If
-                ws.Rows(topRow).RowHeight = 0.4 * 72
+                ws.Rows(topRow).RowHeight = 0.57 * 72
             End With
         End If
     Next cell
 End Sub
-
 Function ExtractState(cellText As String) As String
     Dim parts() As String
     Dim lastWord As String
     Dim keywords As Variant
     Dim i As Long
     keywords = Array("ON", "OFF", "True", "False", "Lit", "Not Lit", "Flashing")
-
     If InStr(cellText, "-") > 0 Then
         ExtractState = Trim(Mid(cellText, InStr(cellText, "-") + 1))
         Exit Function
     End If
-
     parts = Split(cellText, " ")
     If UBound(parts) >= 0 Then
         lastWord = parts(UBound(parts))
@@ -229,19 +198,16 @@ Function ExtractState(cellText As String) As String
             End If
         Next i
     End If
-
     If InStr(cellText, "/") > 0 Then
         ExtractState = cellText
         Exit Function
     End If
-
     If UBound(parts) >= 0 Then
         ExtractState = parts(UBound(parts))
     Else
         ExtractState = ""
     End If
 End Function
-
 Function InsertHeaderOnEachPage(ws As Worksheet, headerRow As Long) As Collection
     Dim pb As HPageBreak
     Dim breakRow As Long
@@ -249,10 +215,8 @@ Function InsertHeaderOnEachPage(ws As Worksheet, headerRow As Long) As Collectio
     Dim lastCol As Long
     Dim headerRange As Range
     Dim insertedRows As New Collection
-
-    lastCol = ws.Cells(headerRow, ws.Columns.Count).End(xlToLeft).Column
+    lastCol = ws.Cells(headerRow, ws.Columns.count).End(xlToLeft).Column
     Set headerRange = ws.Range(ws.Cells(headerRow, 1), ws.Cells(headerRow, lastCol))
-
     For Each pb In ws.HPageBreaks
         breakRow = pb.Location.Row
         firstCellText = Trim(ws.Cells(breakRow, 1).text)
@@ -264,7 +228,6 @@ Function InsertHeaderOnEachPage(ws As Worksheet, headerRow As Long) As Collectio
             insertedRows.Add breakRow
         End If
     Next pb
-
     Set InsertHeaderOnEachPage = insertedRows
 End Function
 
