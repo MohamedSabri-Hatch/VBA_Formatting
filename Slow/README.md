@@ -2,7 +2,7 @@ This document is to maintain naming conventions and easily refer back to whichev
 
 (EOS) Slow Slow v0 is the most updated and completed version of the code prior to Nicole's comments.
   - All v0 code files are tested updates to the code such as
-      - v0.1 with an added column formatting function (doesn't work) :white_check_mark:
+      - v0.1 with an added column formatting function (doesn't work) :white_check_mark: <ul><li>- [x] item1</li>
       - v0.2 is unmerging additional rows and resizing the rows to match merged height (mainly for top side of document format) &cross;
         - v0.2.x.y (x varies depending on 0.2 version) remove grey column at the end of the table &cross;
       - v0.3 replaces non capitalized codes with capitalized versions (ie. Tpmt --> TPMT) &cross;
