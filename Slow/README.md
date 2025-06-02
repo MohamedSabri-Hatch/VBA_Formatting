@@ -4,6 +4,7 @@ This document is to maintain naming conventions and easily refer back to whichev
   - All v0 code files are tested updates to the code such as
       - v0.1 with an added column formatting function (doesn't work)
       - v0.2 is unmerging additional rows and resizing the rows to match merged height (mainly for top side of document format)
+        - v0.2.x.1 (x varies depending on 0.2 version) remove grey column at the end of the table
       - v0.3 replaces non capitalized codes with capitalized versions (ie. Tpmt --> TPMT)
   - v1 implements efficient row sizing
   - v2 code will focus on implementing column width changes
