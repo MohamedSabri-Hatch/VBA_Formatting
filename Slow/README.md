@@ -11,6 +11,6 @@ This document is to maintain naming conventions and easily refer back to whichev
       - v2.x will be updated row sizing values to better fit with column width changes
   - v3 fixes bolding -[]
       - v3.x fixes code bolding -[]
-      - v3.x.y fixes bolding in rows following greyed out rows -[]
-  - v4 add periods to the end of comment section -[]
+      - v3.x.y fixes bolding in rows following greyed out rows - [ ]
+  - v4 add periods to the end of comment section - [ ]
   - v5 modularize everything into its own set of functions - main macro to be barebones calling on functions -[]
