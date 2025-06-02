@@ -12,5 +12,5 @@ This document is to maintain naming conventions and easily refer back to whichev
   - v3 fixes bolding &cross;
       - v3.x fixes code bolding &cross;
       - v3.x.y fixes bolding in rows following greyed out rows &cross;
-  - v4 add periods to the end of comment section &cross;
+  - v4 add periods to the end of comment section &cross; ❎
   - v5 modularize everything into its own set of functions - main macro to be barebones calling on functions &cross;
