@@ -9,5 +9,7 @@ This document is to maintain naming conventions and easily refer back to whichev
   - v1 implements efficient row sizing
   - v2 code will focus on implementing column width changes
   - v3 fixes bolding
+      - v3.x fixes code bolding
+      - v3.1.x fixes bolding in rows following greyed out rows
   - v4 add periods to the end of comment section
   - v5 modularize everything into its own set of functions - main macro to be barebones calling on functions
