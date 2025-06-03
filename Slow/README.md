@@ -11,7 +11,7 @@ This document is to maintain naming conventions and easily refer back to whichev
       - v2.x will be updated row sizing values to better fit with column width changes
   - v3 fixes header rows
       - v3.1 does a lot of things
-        - implements efficient row sizing for header columns too
+        - implements efficient row sizing for inserted header columns too
         - removes added header rows
         - replaces them with properly formatted header rows
         - optimized page break search
