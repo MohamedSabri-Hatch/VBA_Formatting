@@ -15,6 +15,7 @@ This document is to maintain naming conventions and easily refer back to whichev
         - removes added header rows
         - replaces them with properly formatted header rows
         - optimized page break search
+      -v3.2 fixes initial header row height --> changed CleanUpHeaderMergedRows
   - v4 fixes bolding &cross;
       - v4.x fixes code bolding &cross;
       - v4.x.y fixes bolding in rows following greyed out rows &cross;
