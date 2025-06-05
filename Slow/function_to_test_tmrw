@@ -1,0 +1,37 @@
+Function ExtractState(cellText As String) As String
+    Dim cleanedText As String
+    Dim parts() As String
+
+    ' Remove anything in parentheses
+    If InStr(cellText, "(") > 0 And InStr(cellText, ")") > InStr(cellText, "(") Then
+        cleanedText = Trim(Left(cellText, InStr(cellText, "(") - 1))
+    Else
+        cleanedText = Trim(cellText)
+    End If
+
+    ' If it contains "shunted"
+    If InStr(1, cleanedText, "shunted", vbTextCompare) > 0 Then
+        ExtractState = "Shunted"
+        Exit Function
+    End If
+
+    ' If it starts with "Code", return the full cleaned line
+    If LCase(Left(cleanedText, 4)) = "code" Then
+        ExtractState = cleanedText
+        Exit Function
+    End If
+
+    ' If it contains "no code out"
+    If InStr(1, cleanedText, "no code out", vbTextCompare) > 0 Then
+        ExtractState = "No Code Out"
+        Exit Function
+    End If
+
+    ' Fallback: return the last word
+    parts = Split(cleanedText, " ")
+    If UBound(parts) >= 0 Then
+        ExtractState = parts(UBound(parts))
+    Else
+        ExtractState = ""
+    End If
+End Function
