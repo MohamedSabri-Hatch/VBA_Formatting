@@ -19,6 +19,7 @@ This document is to maintain naming conventions and easily refer back to whichev
       - v3.3 fixes bugs in header row height & fixed different background colours (set all to RGB 191, 191, 191)
   - v4 fixes bolding &cross;
       - v4.x fixes bolding in rows following greyed out rows &cross;
-      - v4.x.y fixes code bolding &cross; 
+      - v4.x.y fixes code bolding &cross;
+      -   v4.1.2 is what i had opened - ran fine still not recognizing shunted and recognizes () as a state 
   - v5 add periods to the end of comment section &cross; ❎
   - v6 modularize everything into its own set of functions - main macro to be barebones calling on functions &cross;
