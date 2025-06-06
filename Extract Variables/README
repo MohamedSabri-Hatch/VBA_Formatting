@@ -1,0 +1,21 @@
+# 🔍 v0 Functionality Summary
+# This version introduces foundational logic for intelligent variable and state extraction from spreadsheet-like cell data. The key features include:
+
+# ✅ Core Features
+# Merged Area Detection: Automatically identifies the starting cell of a merged area containing the keyword "action".
+# Header Name Identification: Extracts header names from cells, marking them as valid when they are not empty or reserved terms like "result".
+# Line-by-Line Parsing: Each cell's content is processed line by line to extract all potential variable names and states.
+# Finds concensus of names and states based on user input.
+#
+# 🧠 Extraction Logic
+# The system uses a combination of rules and heuristics to identify variable names and states:
+#   Hyphen-based parsing (e.g., Name - State)
+#   Slash-separated state indicators (e.g., ON/OFF)
+#   Keyword matching for known states (e.g., True, False, Lit, Occupied)
+#   Transition word detection (e.g., goes, stays, moves)
+#   Header-based inference: Uses header names to support state identification
+#   Verification logic: Tracks and confirms extracted names and states when multiple candidates are found
+# 
+# ⚠️ Known Limitations
+# Header-based name extraction is not yet implemented
+# Manual input prompts are currently disabled for streamlined automation
