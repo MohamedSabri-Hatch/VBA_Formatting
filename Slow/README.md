@@ -18,11 +18,12 @@ This document is to maintain naming conventions and easily refer back to whichev
       - v3.2 fixes initial header row height --> changed CleanUpHeaderMergedRows
       - v3.3 fixes bugs in header row height & fixed different background colours (set all to RGB 191, 191, 191)
   - v4 fixes bolding &cross;
-      - v4.x fixes bolding in rows following greyed out rows &cross;
+      - v4.x fixes bolding in rows following greyed out rows &cross; ✅
       - v4.x.y fixes code bolding &cross;
           - v4.1.2 is what i had opened - ran fine still not recognizing shunted and recognizes () as a state
-          -  v4.1.3 bolding is mostly good - added tp capitalization (doesn't work for headers for some reason) **THIS IS WRONG I JUST REALIZED BOLDING IS BROKEN**
-              - Note - I noticed that even if previous state is Code 1,8 (Code 1,7) then next is (Code 1,7) it still didn't recognize it as same state so review logic behind it
-              - v4.1.3.1 **BOLDING STILL BROKEN** added capitalization for fp
+          - v4.1.3 is a functioning bolding wit TP and FP capitalization
+              - v4.1.3.0.1 bolding is mostly good - added tp capitalization (doesn't work for headers for some reason) **THIS IS WRONG I JUST REALIZED BOLDING IS BROKEN**
+                - Note - I noticed that even if previous state is Code 1,8 (Code 1,7) then next is (Code 1,7) it still didn't recognize it as same state so review logic behind it
+              - v4.1.3.0.2 **BOLDING STILL BROKEN** added capitalization for fp
   - v5 add periods to the end of comment section &cross; ❎
   - v6 modularize everything into its own set of functions - main macro to be barebones calling on functions &cross;
