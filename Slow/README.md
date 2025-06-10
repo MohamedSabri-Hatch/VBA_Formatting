@@ -28,5 +28,6 @@ This document is to maintain naming conventions and easily refer back to whichev
               - v4.1.3.1 is proper capitalization for FP and TP in header + body modularized
       - v4.2 fixed bolding and capitalization -- added comment case handling & **ADDED PERIODS TO COMMENT SECTION**
   - v5 fixed row height sizing broken in v4
+      - **BREAKS RANDOMLY - WHEN IT DOES CHANGE "charsPerLine = mergedWidth * 1.1 TO 1.4"**
   - v6 remove last grey empty row &cross; ❎
   - v7 modularize everything into its own set of functions - main macro to be barebones calling on functions &cross;
