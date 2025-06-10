@@ -1,0 +1,552 @@
+Sub FormatCPKCTable_Basic_AlignedProperly()
+    Dim ws As Worksheet
+    Dim cell As Range, startCell As Range
+    Dim col As Long, lastCol As Long
+    Dim rowNum As Long, lastRow As Long
+    Dim text As String
+    Dim r As Long, c As Long
+    Dim prevText As String, currText As String
+    Dim prevState As String, currState As String
+    Dim stateStart As Long
+    Dim stateWordCount As Integer
+    Dim charCount As Long, charsPerLine As Double, estLines As Long, maxLines As Long
+    Dim totalWidth As Double
+    Dim mc As Range
+    Dim headerEndRow As Long
+    Dim highlightColor As Long
+    Dim checkCol As Long
+    Dim codeStart As Long
+    Dim lookUpRow As Long
+    Dim noCodeStart As Long
+    Dim currLabel As String, prevLabel As String
+    Dim openParen As Long, closeParen As Long
+    Dim insertedHeaders As Collection
+    Dim hdrRow As Variant
+    Dim headerCharCount As Long, headerWidth As Double, headerLines As Long
+    Dim mergedWidth As Double, lineBreaks As Long
+
+    Set ws = ActiveSheet
+
+    ' Find the header cell starting with "Action"
+    For Each cell In ws.UsedRange
+        If LCase(Left(Trim(cell.Value), 6)) = "action" Then
+            Set startCell = cell
+            Exit For
+        End If
+    Next cell
+
+    If startCell Is Nothing Then
+        MsgBox "No header starting with 'Action' found."
+    End If
+
+    rowNum = startCell.Row
+    lastCol = ws.Cells(rowNum, ws.Columns.Count).End(xlToLeft).Column
+    
+    Call FormatCommentSection(ws, startCell.Row, startCell.Column - 1, lastCol)
+
+    ' Format Columns Testing
+    With ws
+    .Columns("A:A").ColumnWidth = 2.86
+    .Columns("B:J").ColumnWidth = 9
+    End With
+    
+    ' Format header row
+    For col = startCell.Column - 1 To lastCol
+        Set cell = ws.Cells(rowNum, col)
+        text = Trim(cell.Value)
+        If text <> "" Then
+            text = Application.WorksheetFunction.Proper(text)
+            text = CapitalizeTPFPWords(text)
+            cell.Value = text
+        End If
+        With cell
+            .Font.Name = "Arial"
+            .Font.Size = 10
+            .Font.Bold = True
+            .Interior.Color = RGB(191, 191, 191)
+            .HorizontalAlignment = xlCenter
+            .VerticalAlignment = xlCenter
+            .WrapText = True
+        End With
+    Next col
+
+    Call RemoveInsertedHeaders(ws, startCell.Row)
+    Call CleanUpHeaderMergedRows(ws, startCell.Row)
+    headerEndRow = startCell.MergeArea.Row + startCell.MergeArea.Rows.Count - 1
+    Call DeleteBottomRowsOfVerticalMerges(ws, headerEndRow + 1)
+
+    lastRow = ws.Cells(ws.Rows.Count, startCell.Column).End(xlUp).Row
+
+    ' Format body cells
+    For r = headerEndRow + 1 To lastRow
+        For c = startCell.Column - 1 To lastCol
+            Set cell = ws.Cells(r, c)
+            text = Trim(Replace(cell.Value, vbLf, " "))
+            text = Replace(text, Chr(160), " ")
+            text = Replace(text, ChrW(&H2191), "up")
+            text = Replace(text, ChrW(&H2193), "down")
+            text = Application.WorksheetFunction.Trim(text)
+            text = CapitalizeTPFPWords(text)
+            cell.Value = text
+            currState = ExtractState(text)
+            stateWordCount = 0
+            If currState <> "" Then stateWordCount = UBound(Split(currState, " ")) + 1
+            With cell.MergeArea
+                .Font.Name = "Arial"
+                .Font.Size = 8
+                .Font.Bold = False
+                .Font.Italic = False
+                .WrapText = True
+                .ShrinkToFit = False
+                .IndentLevel = 0
+                If stateWordCount > 0 And stateWordCount <= 4 Then
+                    .HorizontalAlignment = xlCenter
+                Else
+                    .HorizontalAlignment = xlLeft
+                End If
+            End With
+        Next c
+    Next r
+
+    ' Bold state changes
+' Bold state changes (skip blank rows when comparing)
+    ' Bold state changes (skip blank rows when comparing)
+
+    
+    For r = headerEndRow + 2 To lastRow
+        For c = startCell.Column + 1 To lastCol
+            currText = CStr(ws.Cells(r, c).Value)
+            currState = ExtractState(currText)
+    
+            ' Look up to find the most recent non-empty cell
+            prevState = ""
+            For lookUpRow = r - 1 To headerEndRow + 1 Step -1
+                prevText = CStr(ws.Cells(lookUpRow, c).Value)
+                If Trim(prevText) <> "" Then
+                    prevState = ExtractState(prevText)
+                    Exit For
+                End If
+            Next lookUpRow
+    
+            currLabel = ExtractStateLabel(currState)
+            prevLabel = ExtractStateLabel(prevState)
+            If currLabel <> "" And currLabel <> prevLabel Then
+                stateStart = InStrRev(currText, currState)
+                If stateStart > 0 Then
+                    With ws.Cells(r, c).Characters(Start:=stateStart, Length:=Len(currState)).Font
+                        .Bold = True
+                    End With
+                    codeStart = InStrRev(Left(currText, stateStart), "Code", , vbTextCompare)
+                    If codeStart > 0 Then
+                        With ws.Cells(r, c).Characters(Start:=codeStart, Length:=4).Font
+                            .Bold = True
+                        End With
+                    End If
+                End If
+            End If
+    
+            ' Bold the entire parenthetical expression, if present
+            openParen = InStr(currText, "(")
+            closeParen = InStr(currText, ")")
+            If openParen > 0 And closeParen > openParen Then
+                With ws.Cells(r, c).Characters(Start:=openParen, Length:=closeParen - openParen + 1).Font
+                    .Bold = True
+                End With
+            End If
+            noCodeStart = InStr(1, currText, "No code out", vbTextCompare)
+            If noCodeStart > 0 Then
+                With ws.Cells(r, c).Characters(Start:=noCodeStart, Length:=11).Font
+                    .Bold = True
+                End With
+            End If
+        Next c
+    Next r
+
+    For r = headerEndRow + 1 To lastRow
+        ' Check for special case in column 2
+        'If InStr(1, ws.Cells(r, 2).Value, "Line signal TPM", vbTextCompare) > 0 Then
+         '   ws.Rows(r).RowHeight = 12.75
+          '  If r <= headerEndRow + 20 Then Debug.Print "Row " & r & ": Special case matched — forced height 12.75"
+           ' GoTo NextRow
+        'End If
+        maxLines = 1
+        If r <= headerEndRow + 20 Then Debug.Print "Row " & r & ":"
+        
+        For c = startCell.Column - 1 To lastCol
+            With ws.Cells(r, c)
+                If .MergeCells Then Set cell = .MergeArea.Cells(1, 1) Else Set cell = .Cells(1, 1)
+                If .WrapText Then
+                    charCount = Len(cell.Value)
+                    If cell.MergeCells Then
+                        mergedWidth = 0
+                        For Each mc In cell.MergeArea.Columns
+                            mergedWidth = mergedWidth + mc.ColumnWidth
+                        Next mc
+                    Else
+                        mergedWidth = cell.ColumnWidth
+                    End If
+                    If mergedWidth > 0 Then
+                        charsPerLine = mergedWidth * 1.4
+                        If Len(cell.Value) = 0 Then
+                            lineBreaks = 0
+                        Else
+                            lineBreaks = UBound(Split(cell.Value, vbLf))
+                        End If
+                        estLines = Application.WorksheetFunction.RoundUp((charCount / charsPerLine), 0)
+                        totalLines = estLines + lineBreaks
+                        If totalLines > maxLines Then maxLines = totalLines
+                        If r <= headerEndRow + 20 Then
+                            Debug.Print "  Col " & c & ": """ & Left(cell.Value, 30) & _
+                                        """... | Chars: " & charCount & _
+                                        ", Width: " & Format(mergedWidth, "0.0") & _
+                                        ", estLines: " & estLines & _
+                                        ", lineBreaks: " & lineBreaks & _
+                                        ", totalLines: " & totalLines
+                        End If
+                    End If
+                End If
+            End With
+        Next c
+    
+        If r <= headerEndRow + 20 Then Debug.Print "  => Max lines for row " & r & ": " & maxLines
+    
+        ' Apply fixed height based on estimated lines (body-specific bounds)
+        Select Case maxLines
+            Case Is <= 1: ws.Rows(r).RowHeight = 12.75  ' ~1 line
+            Case 2:       ws.Rows(r).RowHeight = 21     ' ~2 lines
+            Case 3:       ws.Rows(r).RowHeight = 32     ' ~3 lines
+            Case 4:       ws.Rows(r).RowHeight = 47     ' ~4 lines
+            Case Else:    ws.Rows(r).RowHeight = 64     ' 5+ lines
+        End Select
+    
+NextRow:
+    Next r
+
+
+    highlightColor = RGB(191, 191, 191)
+    checkCol = 1 ' Adjust if another column is more reliable
+    
+    For r = headerEndRow + 2 To lastRow ' Start from second row after header
+        With ws.Cells(r, checkCol).Interior
+            If .Color <> RGB(255, 255, 255) And .Color <> highlightColor Then
+                ws.Range(ws.Cells(r, 1), ws.Cells(r, lastCol)).Interior.Color = highlightColor
+            End If
+        End With
+    Next r
+
+    ' Insert headers on each page
+    Set insertedHeaders = InsertHeaderOnEachPage(ws, startCell.Row)
+    For Each hdrRow In insertedHeaders
+        maxLines = 1
+        For col = 1 To lastCol
+            With ws.Cells(hdrRow, col)
+                .Font.Name = "Arial"
+                .Font.Size = 10
+                .Font.Bold = True
+                .Interior.Color = RGB(191, 191, 191)
+                .HorizontalAlignment = xlCenter
+                .VerticalAlignment = xlCenter
+                .WrapText = True
+                headerCharCount = Len(.Value)
+                If .MergeCells Then
+                    mergedWidth = 0
+                    For Each mc In .MergeArea.Columns
+                        mergedWidth = mergedWidth + mc.ColumnWidth
+                    Next mc
+                Else
+                    mergedWidth = .ColumnWidth
+                End If
+                If mergedWidth > 0 Then
+                    charsPerLine = mergedWidth * 1.2
+                    lineBreaks = UBound(Split(.Value, vbLf))
+                    headerLines = Application.WorksheetFunction.RoundUp(headerCharCount / charsPerLine, 0) + lineBreaks
+                    If headerLines > maxLines Then maxLines = headerLines
+                End If
+            End With
+        Next col
+        
+        ' Apply row height once based on maxLines
+        Select Case maxLines
+            Case Is <= 2: ws.Rows(hdrRow).RowHeight = 28.8 ' 0.4 inches
+            Case 3:       ws.Rows(hdrRow).RowHeight = 36   ' 0.5 inches
+            Case 4:       ws.Rows(hdrRow).RowHeight = 51.4   ' 0.6 inches
+            Case Else:    ws.Rows(hdrRow).RowHeight = 64 ' 0.7 inches
+        End Select
+    Next hdrRow
+    MsgBox "Formatting complete: standardized layout, scaled to 7 inches, and optimized."
+End Sub
+
+Sub DeleteBottomRowsOfVerticalMerges(ws As Worksheet, startRow As Long)
+    Dim cell As Range
+    Dim mergeRows As Long, bottomRow As Long
+    For Each cell In ws.UsedRange
+        If cell.Row >= startRow Then
+            If cell.MergeCells Then
+                With cell.MergeArea
+                    mergeRows = .Rows.Count
+                    If mergeRows > 1 Then
+                        bottomRow = .Row + mergeRows - 1
+                        If bottomRow > cell.Row Then
+                            On Error Resume Next
+                            ws.Rows(bottomRow).Delete
+                            On Error GoTo 0
+                        End If
+                    End If
+                End With
+            End If
+        End If
+    Next cell
+End Sub
+
+Sub CleanUpHeaderMergedRows(ws As Worksheet, headerRow As Long)
+    Dim cell As Range
+    Dim mergeRows As Long, bottomRow As Long
+    Dim topRow As Long
+    Dim headerCharCount As Long, mergedWidth As Double
+    Dim headerLines As Long, charsPerLine As Double
+    Dim maxLines As Long, lineBreaks As Long
+    
+    maxLines = 1
+    For Each cell In ws.Rows(headerRow).Cells
+        If cell.MergeCells Then
+            With cell.MergeArea
+                mergeRows = .Rows.Count
+                topRow = .Row
+                bottomRow = topRow + mergeRows - 1
+
+                ' Delete rows below the top of the merge
+                If mergeRows > 1 Then
+                    On Error Resume Next
+                    ws.Rows((topRow + 1) & ":" & bottomRow).Delete
+                    On Error GoTo 0
+                End If
+
+                ' Estimate line count
+                headerCharCount = Len(cell.Value)
+                mergedWidth = 0
+                For Each col In .Columns
+                    mergedWidth = mergedWidth + col.ColumnWidth
+                Next col
+
+                If mergedWidth > 0 Then
+                    charsPerLine = mergedWidth * 1.2
+                    lineBreaks = UBound(Split(cell.Value, vbLf))
+                    headerLines = Application.WorksheetFunction.RoundUp(headerCharCount / charsPerLine, 0) + lineBreaks
+                    If headerLines > maxLines Then maxLines = headerLines
+                End If
+            End With
+        ElseIf Len(cell.Value) > 0 Then
+            ' Handle unmerged header cells
+            headerCharCount = Len(cell.Value)
+            mergedWidth = cell.ColumnWidth
+            If mergedWidth > 0 Then
+                charsPerLine = mergedWidth * 1.2
+                lineBreaks = UBound(Split(cell.Value, vbLf))
+                headerLines = Application.WorksheetFunction.RoundUp(headerCharCount / charsPerLine, 0) + lineBreaks
+                If headerLines > maxLines Then maxLines = headerLines
+
+            End If
+        End If
+    Next cell
+
+    ' Apply row height once based on maxLines
+    Select Case maxLines
+        Case Is <= 2: ws.Rows(headerRow).RowHeight = 28.8 ' 0.4 inches
+        Case 3:       ws.Rows(headerRow).RowHeight = 36   ' 0.5 inches
+        Case 4:       ws.Rows(headerRow).RowHeight = 51.4 ' 0.6 inches
+        Case Else:    ws.Rows(headerRow).RowHeight = 64   ' 0.7 inches
+    End Select
+End Sub
+
+Function ExtractState(cellText As String) As String
+    Dim cleanedText As String
+    Dim parts() As String
+    Dim lastWord As String
+    Dim keywords As Variant
+    Dim i As Long
+
+    ' Remove anything in parentheses (comments)
+    If InStr(cellText, "(") > 0 Then
+        cleanedText = Trim(Left(cellText, InStr(cellText, "(") - 1))
+    Else
+        cleanedText = Trim(cellText)
+    End If
+
+    ' Handle dash-separated states
+    If InStr(cleanedText, "-") > 0 Then
+        ExtractState = Trim(Mid(cleanedText, InStr(cleanedText, "-") + 1))
+        Exit Function
+    End If
+
+    ' Check for known keywords
+    keywords = Array("ON", "OFF", "True", "False", "Lit", "Not Lit", "Flashing")
+    parts = Split(cleanedText, " ")
+    If UBound(parts) >= 0 Then
+        lastWord = parts(UBound(parts))
+        For i = LBound(keywords) To UBound(keywords)
+            If StrComp(lastWord, keywords(i), vbTextCompare) = 0 Then
+                ExtractState = lastWord
+                Exit Function
+            End If
+        Next i
+    End If
+
+    ' If slash is present, treat whole cleaned text as state
+    If InStr(cleanedText, "/") > 0 Then
+        ExtractState = cleanedText
+        Exit Function
+    End If
+
+    ' Default to last word
+    If UBound(parts) >= 0 Then
+        ExtractState = parts(UBound(parts))
+    Else
+        ExtractState = ""
+    End If
+End Function
+
+
+Function InsertHeaderOnEachPage(ws As Worksheet, headerRow As Long) As Collection
+    Dim pb As HPageBreak
+    Dim breakRow As Long
+    Dim lastCol As Long
+    Dim insertedRows As New Collection
+    Dim existingHeader As String
+    Dim originalHeader As String
+
+    ' Force recalculation of page breaks
+    ws.Activate
+    ActiveWindow.View = xlPageBreakPreview
+    ActiveWindow.View = xlNormalView
+
+    lastCol = ws.Cells(headerRow, ws.Columns.Count).End(xlToLeft).Column
+    originalHeader = Join(Application.Transpose(Application.Transpose(ws.Range(ws.Cells(headerRow, 1), ws.Cells(headerRow, lastCol)).Value)), "|")
+
+    For Each pb In ws.HPageBreaks
+        breakRow = pb.Location.Row
+
+        existingHeader = Join(Application.Transpose(Application.Transpose(ws.Range(ws.Cells(breakRow, 1), ws.Cells(breakRow, lastCol)).Value)), "|")
+
+        If StrComp(existingHeader, originalHeader, vbTextCompare) <> 0 Then
+            ws.Rows(headerRow).Copy
+            ws.Rows(breakRow).Insert Shift:=xlDown
+            Application.CutCopyMode = False
+            insertedRows.Add breakRow
+        End If
+    Next pb
+
+    Set InsertHeaderOnEachPage = insertedRows
+End Function
+
+Sub RemoveInsertedHeaders(ws As Worksheet, headerRow As Long)
+    Dim pb As HPageBreak
+    Dim breakRow As Long
+    Dim cellText As String
+
+    ' Force recalculation of page breaks
+    ws.Activate
+    ActiveWindow.View = xlPageBreakPreview
+    ActiveWindow.View = xlNormalView
+
+    ' Loop through each page break
+    For Each pb In ws.HPageBreaks
+        breakRow = pb.Location.Row
+        cellText = Trim(ws.Cells(breakRow, 1).text)
+
+        ' If the first cell starts with "No.", it's likely an inserted header
+        If LCase(Left(cellText, 3)) = "no." Then
+            ws.Rows(breakRow).Delete
+        End If
+    Next pb
+End Sub
+
+Function ExtractStateLabel(stateText As String) As String
+    Dim parts() As String
+    stateText = Trim(stateText)
+    
+    If stateText = "" Then
+        ExtractStateLabel = ""
+        Exit Function
+    End If
+
+    If LCase(Left(stateText, 4)) = "code" Then
+        ExtractStateLabel = "Code"
+        Exit Function
+    End If
+
+    If InStr(1, stateText, "Shunted", vbTextCompare) > 0 Then
+        ExtractStateLabel = "Shunted"
+        Exit Function
+    End If
+
+    If InStr(1, stateText, "no code out", vbTextCompare) > 0 Then
+        ExtractStateLabel = "No Code Out"
+        Exit Function
+    End If
+
+    parts = Split(stateText, " ")
+    ExtractStateLabel = parts(0)
+End Function
+
+Function CapitalizeTPFPWords(text As String) As String
+    Dim words() As String
+    Dim i As Integer
+    words = Split(text, " ")
+    For i = LBound(words) To UBound(words)
+        If UCase(Left(words(i), 2)) = "TP" Or UCase(Left(words(i), 2)) = "FP" Then
+            words(i) = UCase(words(i))
+        End If
+    Next i
+    CapitalizeTPFPWords = Join(words, " ")
+End Function
+
+Sub FormatCommentSection(ws As Worksheet, headerRow As Long, startCol As Long, endCol As Long)
+    Dim commentRow As Long
+    Dim cell As Range
+    Dim mergedCell As Range
+    Dim text As String
+    Dim lines() As String
+    Dim i As Integer
+    Dim line As String
+    Dim bullet As String
+    Dim content As String
+    Dim lastChar As String
+
+    ' Check up to two rows above the header
+    For commentRow = headerRow - 1 To headerRow - 2 Step -1
+        Set cell = ws.Cells(commentRow, startCol)
+        Set mergedCell = cell.MergeArea
+
+        If mergedCell Is Nothing Then Exit Sub
+
+        text = Trim(mergedCell.Cells(1, 1).Value)
+
+        If text <> "" Then
+            lines = Split(text, vbLf)
+            For i = LBound(lines) To UBound(lines)
+                line = Trim(lines(i))
+                If line <> "" Then
+                    ' Detect bullet (• or - or similar)
+                    If Left(line, 2) = "• " Or Left(line, 2) = "- " Then
+                        bullet = Left(line, 2)
+                        content = Mid(line, 3)
+                    Else
+                        bullet = ""
+                        content = line
+                    End If
+
+                    content = Trim(content)
+                    lastChar = Right(content, 1)
+
+                    If InStr(".!?", lastChar) = 0 Then
+                        content = content & "."
+                    End If
+
+                    lines(i) = bullet & content
+                End If
+            Next i
+            mergedCell.Cells(1, 1).Value = Join(lines, vbLf)
+            Exit Sub
+        End If
+    Next commentRow
+End Sub
