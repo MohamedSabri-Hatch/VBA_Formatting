@@ -25,5 +25,6 @@ This document is to maintain naming conventions and easily refer back to whichev
               - v4.1.3.0.1 bolding is mostly good - added tp capitalization (doesn't work for headers for some reason) **THIS IS WRONG I JUST REALIZED BOLDING IS BROKEN**
                 - Note - I noticed that even if previous state is Code 1,8 (Code 1,7) then next is (Code 1,7) it still didn't recognize it as same state so review logic behind it
               - v4.1.3.0.2 **BOLDING STILL BROKEN** added capitalization for fp
+              - v4.1.3.1 is proper capitalization for FP and TP in header + body modularized
   - v5 add periods to the end of comment section &cross; ❎
   - v6 modularize everything into its own set of functions - main macro to be barebones calling on functions &cross;
