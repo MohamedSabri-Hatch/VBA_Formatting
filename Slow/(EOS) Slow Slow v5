@@ -195,14 +195,6 @@ Sub FormatCPKCTable_Basic_AlignedProperly()
                         estLines = Application.WorksheetFunction.RoundUp((charCount / charsPerLine), 0)
                         totalLines = estLines + lineBreaks
                         If totalLines > maxLines Then maxLines = totalLines
-                        If r <= headerEndRow + 20 Then
-                            Debug.Print "  Col " & c & ": """ & Left(cell.Value, 30) & _
-                                        """... | Chars: " & charCount & _
-                                        ", Width: " & Format(mergedWidth, "0.0") & _
-                                        ", estLines: " & estLines & _
-                                        ", lineBreaks: " & lineBreaks & _
-                                        ", totalLines: " & totalLines
-                        End If
                     End If
                 End If
             End With
