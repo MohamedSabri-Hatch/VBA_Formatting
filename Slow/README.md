@@ -26,6 +26,6 @@ This document is to maintain naming conventions and easily refer back to whichev
                 - Note - I noticed that even if previous state is Code 1,8 (Code 1,7) then next is (Code 1,7) it still didn't recognize it as same state so review logic behind it
               - v4.1.3.0.2 **BOLDING STILL BROKEN** added capitalization for fp
               - v4.1.3.1 is proper capitalization for FP and TP in header + body modularized
-      - v4.2 fixed bolding and capitalization -- added comment case handling
-  - v5 add periods to the end of comment section &cross; ❎
+      - v4.2 fixed bolding and capitalization -- added comment case handling & **ADDED PERIODS TO COMMENT SECTION**
+  - v5 remove last grey empty row &cross; ❎
   - v6 modularize everything into its own set of functions - main macro to be barebones calling on functions &cross;
