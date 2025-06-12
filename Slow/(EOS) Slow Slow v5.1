@@ -275,6 +275,7 @@ NextRow:
     MsgBox "Formatting complete: standardized layout, scaled to 7 inches, and optimized."
 End Sub
 
+'Get rid of merged rows
 Sub DeleteBottomRowsOfVerticalMerges(ws As Worksheet, startRow As Long)
     Dim cell As Range
     Dim mergeRows As Long, bottomRow As Long
@@ -297,6 +298,7 @@ Sub DeleteBottomRowsOfVerticalMerges(ws As Worksheet, startRow As Long)
     Next cell
 End Sub
 
+'Fix up header row formatting
 Sub CleanUpHeaderMergedRows(ws As Worksheet, headerRow As Long)
     Dim cell As Range
     Dim mergeRows As Long, bottomRow As Long
@@ -357,6 +359,7 @@ Sub CleanUpHeaderMergedRows(ws As Worksheet, headerRow As Long)
     End Select
 End Sub
 
+'Determine state of the cell
 Function ExtractState(cellText As String) As String
     Dim cleanedText As String
     Dim parts() As String
@@ -404,7 +407,7 @@ Function ExtractState(cellText As String) As String
     End If
 End Function
 
-
+'Add a header at the start of every new page
 Function InsertHeaderOnEachPage(ws As Worksheet, headerRow As Long) As Collection
     Dim pb As HPageBreak
     Dim breakRow As Long
@@ -437,6 +440,7 @@ Function InsertHeaderOnEachPage(ws As Worksheet, headerRow As Long) As Collectio
     Set InsertHeaderOnEachPage = insertedRows
 End Function
 
+'For running the code when already previously formatted
 Sub RemoveInsertedHeaders(ws As Worksheet, headerRow As Long)
     Dim pb As HPageBreak
     Dim breakRow As Long
@@ -459,6 +463,7 @@ Sub RemoveInsertedHeaders(ws As Worksheet, headerRow As Long)
     Next pb
 End Sub
 
+'Used for debugging and keyword recognition
 Function ExtractStateLabel(stateText As String) As String
     Dim parts() As String
     stateText = Trim(stateText)
@@ -487,6 +492,7 @@ Function ExtractStateLabel(stateText As String) As String
     ExtractStateLabel = parts(0)
 End Function
 
+'Capitalize TP or FP abbreviations 
 Function CapitalizeTPFPWords(text As String) As String
     Dim words() As String
     Dim i As Integer
@@ -499,6 +505,7 @@ Function CapitalizeTPFPWords(text As String) As String
     CapitalizeTPFPWords = Join(words, " ")
 End Function
 
+'Add periods to the end of sentences in the comment section.
 Sub FormatCommentSection(ws As Worksheet, headerRow As Long, startCol As Long, endCol As Long)
     Dim commentRow As Long
     Dim cell As Range
