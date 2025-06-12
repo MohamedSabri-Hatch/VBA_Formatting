@@ -1,0 +1,367 @@
+Sub FormatCPKCTable_Basic_AlignedProperly()
+    Dim ws As Worksheet
+    Dim cell As Range, startCell As Range
+    Dim col As Long, lastCol As Long
+    Dim rowNum As Long, lastRow As Long
+    Dim text As String
+    Dim r As Long, c As Long
+    Dim prevText As String, currText As String
+    Dim prevState As String, currState As String
+    Dim stateStart As Long
+    Dim stateWordCount As Integer
+    Dim charCount As Long, charsPerLine As Double, estLines As Long, maxLines As Long
+    Dim totalWidth As Double
+    Dim mc As Range
+    Dim headerEndRow As Long
+    Dim userInput As String
+    Dim nameOptions As String
+    Dim Z As Integer
+
+    Set ws = ActiveSheet
+    Dim checkedRange As Range
+    
+    lastRow = ws.UsedRange.Rows(ws.UsedRange.Rows.Count).row
+    lastCol = ws.UsedRange.Columns(ws.UsedRange.Columns.Count).Column
+    
+    rowNum = 1
+    Do While rowNum <= lastRow
+        col = 1
+        Do While col <= lastCol
+            Set cell = ws.Cells(rowNum, col)
+            ' Check the cell value
+            If LCase(Left(Trim(cell.Value), 6)) = "action" Then
+                Set startCell = cell
+                Exit Do
+            End If
+    
+            ' If it's the top-left of a merged area, skip the rest of the merged columns
+            If cell.MergeCells And cell.Address = cell.mergeArea.Cells(1, 1).Address Then
+                col = col + cell.mergeArea.Columns.Count
+            Else
+                col = col + 1
+            End If
+        Loop
+    
+        If Not startCell Is Nothing Then Exit Do
+    
+        ' If it's the top-left of a merged area, skip the rest of the merged rows
+        If cell.MergeCells And cell.Address = cell.mergeArea.Cells(1, 1).Address Then
+            rowNum = rowNum + cell.mergeArea.Rows.Count
+        Else
+            rowNum = rowNum + 1
+        End If
+    Loop
+
+
+    If startCell Is Nothing Then
+        MsgBox "No header starting with 'Action' found."
+        Exit Sub
+    End If
+
+    ' Step 2: Format header row
+    rowNum = startCell.row
+    lastCol = ws.Cells(rowNum, ws.Columns.Count).End(xlToLeft).Column
+
+'    For col = startCell.Column - 1 To lastCol
+'        Set cell = ws.Cells(rowNum, col)
+'        text = Trim(cell.Value)
+'
+'        With cell
+'            .Font.Name = "Aptos Narrow"
+'            .Font.Size = 10
+'            .Font.Bold = True
+'            .Interior.Color = RGB(217, 217, 217)
+'            .HorizontalAlignment = xlCenter
+'            .VerticalAlignment = xlCenter
+'            .WrapText = True
+'        End With
+'
+'        If text <> "" Then
+'            cell.Value = Application.WorksheetFunction.Proper(text)
+'        End If
+'    Next col
+
+    ' Step 3: Determine the last row of the merged header
+    headerEndRow = startCell.mergeArea.row + startCell.mergeArea.Rows.Count - 1
+
+'    ' Step 3.5: Delete bottom rows of vertically merged cells under the header
+'    Call DeleteBottomRowsOfVerticalMerges(ws, headerEndRow + 1)
+
+    ' Step 4: Format data rows with conditional alignment
+    lastRow = ws.Cells(ws.Rows.Count, startCell.Column).End(xlUp).row
+
+'    For r = headerEndRow + 1 To lastRow
+'        For c = startCell.Column - 1 To lastCol
+'            Set cell = ws.Cells(r, c)
+'            text = Trim(Replace(cell.Value, vbLf, " "))
+'            text = Replace(text, Chr(160), " ")
+'            text = Application.WorksheetFunction.Trim(text)
+'
+'            currState = ExtractState(text)
+'            stateWordCount = 0
+'            If currState <> "" Then stateWordCount = UBound(Split(currState, " ")) + 1
+'
+'            With cell.mergeArea
+'                .Font.Name = "Arial"
+'                .Font.Size = 8
+'                .Font.Bold = False
+'                .Font.Italic = False
+'                .WrapText = True
+'                .ShrinkToFit = False
+'                .IndentLevel = 0
+'
+'                If stateWordCount > 0 And stateWordCount <= 4 Then
+'                    .HorizontalAlignment = xlCenter
+'                Else
+'                    .HorizontalAlignment = xlLeft
+'                End If
+'            End With
+'        Next c
+'    Next r
+
+    ' Step 5: Bold only changed state portion of text (excluding leftmost column)
+    Dim variableMap As Object
+    Set variableMap = CreateObject("Scripting.Dictionary")
+    Dim hasHeaderName As Object
+    Set hasHeaderName = CreateObject("Scripting.Dictionary")
+
+    For r = rowNum To lastRow
+        For c = startCell.Column + 1 To lastCol - 1
+            Dim cellText As String
+            Dim colLetter As String
+            colLetter = Split(Cells(1, c).Address(False, False), "1")(0)
+            cellText = CStr(ws.Cells(r, c).Value)
+
+            If Trim(cellText) = "" Then GoTo NextColumn
+
+            Dim currentVar As Object
+
+            ' If we're on the header row, check for variable name
+            If r = rowNum Then
+                Set currentVar = headerName(cellText, colLetter)
+                If currentVar.Exists(cellText) Then
+                    Dim header As New headerCell
+                    header.Name = cellText
+                    header.nameFlag = True
+                    hasHeaderName.Add colLetter, header
+                End If
+                GoTo CheckNameExists
+            End If
+
+            Dim newItemsDict As Object
+            If Not hasHeaderName(colLetter) Then
+                Set newItemsDict = IdentifyVariablesAndStates(cellText, r, colLetter, False)
+            Else
+                Set newItemsDict = IdentifyVariablesAndStates(cellText, r, colLetter, hasHeaderName(colLetter).nameFlag)
+            End If
+            
+            Dim key As Variant
+            For Each key In newItemsDict.Keys
+                If Not currentVar.Exists(key) Then
+                    currentVar.Add key, newItemsDict(key)
+                End If
+            Next key
+
+CheckNameExists:
+            If currentVar.Count = 0 Then GoTo NextColumn
+
+            ' Check if variable already exists
+            ' Add logic here if hasHeaderName is true
+            ' Than check variablMap.exists(currentVar.colLetter)
+            ' When we find the corresponding colLetter we ignore just skip to the part in the code
+            ' Where we compare the states but include logic to check if .state = "" than DO NOT bold
+            ' I would only need an else if for when the name is found than we do not have a state
+            ' In this case we would not pass the existance statement
+            ' To create a new variable and not even bother checking the state we can just skip to addVariable
+            Dim existingVar As VariableStructClass
+            For i = 0 To currentVar.Count - 1
+                If Not hasHeaderName(colLetter) Then GoTo noHeaderName
+                If hasHeaderName(colLetter).nameFlag Then
+                    currentVar(colLetter).Name = hasHeaderName(colLetter).Name
+                    If variableMap.Exists(colLetter) Then
+                        Set existingVar = variableMap(currentVar(colLetter).Name)
+                    Else
+                        GoTo AddVariable
+                    End If
+                    GoTo CompareState
+                End If
+noHeaderName:
+                If variableMap.Exists(currentVar.Items()(i).Name) Then
+                    Set existingVar = variableMap(currentVar.Items()(i).Name)
+CompareState:
+                    ' Compare state
+                    If existingVar.state <> currentVar.Items()(i).state Then
+                        currentVar.Items()(i).stateChanged = True
+                        ' Bold the changed state in the cell
+                        stateStart = InStrRev(cellText, currentVar.state)
+                        Debug.Print "Comparing states: " & existingVar.state & " vs " & currentVar.Items()(i).state
+                        If stateStart > 0 Then
+                            On Error Resume Next
+                            With ws.Cells(r, c).Characters(Start:=stateStart, Length:=Len(currentVar.Items()(i).state)).Font
+                                .Bold = True
+                            End With
+                            On Error GoTo 0
+                        Else
+                            Debug.Print "State not found in text: " & currentVar.Items()(i).state
+                        End If
+                        ' Update state and reset flag
+                        existingVar.state = currentVar.Items()(i).state
+                        existingVar.stateChanged = False
+                    End If
+                Else
+AddVariable:
+                    ' First time seeing this variable
+                    variableMap.Add currentVar.Items()(i).Name, currentVar.Items()(i)
+                End If
+            Next i
+NextColumn:
+        Next c
+    Next r
+
+    MsgBox "Formatting complete: headers styled, conditional alignment applied, vertically merged rows removed, row heights adjusted, and rows highlighted by line count."
+End Sub
+
+Sub DeleteBottomRowsOfVerticalMerges(ws As Worksheet)
+    Dim cell As Range
+    Dim mergeArea As Range
+    Dim r As Long
+    Dim rowsToDelete As Collection
+
+    Set rowsToDelete = New Collection
+
+    ' Identify all rows in vertical merges except the top row of each merge area
+    For Each cell In ws.UsedRange
+        If cell.MergeCells Then
+            Set mergeArea = cell.mergeArea
+            If mergeArea.Rows.Count > 1 Then
+                For r = mergeArea.row + 1 To mergeArea.row + mergeArea.Rows.Count - 1
+                    On Error Resume Next
+                    rowsToDelete.Add r, CStr(r) ' Avoid duplicates
+                    On Error GoTo 0
+                Next r
+            End If
+        End If
+    Next cell
+
+    ' Delete rows from bottom to top to avoid shifting issues
+    For r = ws.Rows.Count To 1 Step -1
+        On Error Resume Next
+        If Not IsEmpty(Application.Match(r, rowsToDelete, 0)) Then
+            ws.Rows(r).Delete
+        End If
+        On Error GoTo 0
+    Next r
+End Sub
+
+Function headerName(cellText As String, c As String) As Object
+    Dim resultDict As Object
+    Set resultDict = CreateObject("Scripting.Dictionary")
+
+    Dim result As New VariableStructClass
+    cellText = Trim(cellText)
+    
+    result.colLetter = c
+
+    If LCase(cellText) <> "result" And cellText <> "" Then
+        result.Name = cellText
+        result.colLetter = c
+        If Not resultDict.Exists(result.Name) Then
+            resultDict.Add result.Name, result
+        End If
+    End If
+
+    Set headerName = resultDict
+End Function
+
+Function IdentifyVariablesAndStates(cellText As String, row As Long, col As String, hasHeaderName As Boolean) As Object
+    Dim resultDict As Object
+    Set resultDict = CreateObject("Scripting.Dictionary")
+
+    Dim lines() As String
+    lines = Split(cellText, vbLf)
+
+    Dim i As Long
+    For i = LBound(lines) To UBound(lines)
+        Dim lineText As String
+        lineText = Trim(lines(i))
+        If LCase(lineText) Like "*request ignored*" Then GoTo SkipLine
+        
+        Dim result As VariableStructClass
+        Set result = ProcessLine(lineText, row, col, hasHeaderName)
+        If result.state <> "" Then
+            If hasHeaderName Then
+                resultDict.Add result.colLetter, result
+            Else
+                resultDict.Add result.Name, result
+            End If
+        End If
+
+SkipLine:
+    Next i
+
+    Set IdentifyVariablesAndStates = resultDict
+End Function
+
+Private Function ProcessLine(entry As String, row As Long, col As String, hasHeaderName As Boolean) As VariableStructClass
+    Dim stateKeywords As Variant, transitionWords As Variant
+    Dim subParts() As String
+    Dim i As Long, j As Long
+    Dim result As New VariableStructClass
+    stateKeywords = Array("on", "off", "true", "false", "flashing", "occupied", "unoccupied", "not lit", "lit")
+    transitionWords = Array("stays", "stay", "goes", "with", "moves")
+
+    Dim nameDict As Object: Set nameDict = CreateObject("Scripting.Dictionary")
+    Dim stateDict As Object: Set stateDict = CreateObject("Scripting.Dictionary")
+    Dim verifiedName As Boolean: verifiedName = False
+    Dim verifiedState As Boolean: verifiedState = False
+    
+    result.colLetter = col
+    
+    If hasHeaderName Then
+        result.state = entry
+        GoTo UpdateVar
+    End If
+
+    Dim processed As Boolean
+    processed = False
+    
+    ' Priority 1: Hyphen Rule
+    If InStr(entry, "-") > 0 Then
+        subParts = Split(entry, "-")
+        result.Name = Trim(subParts(0))
+        If UBound(subParts) > 0 Then
+            result.state = Trim(Split(subParts(1), ";")(0))
+        End If
+        processed = True
+    End If
+    
+    ' Priority 2: Transition words
+    If Not processed Then
+        For j = LBound(transitionWords) To UBound(transitionWords)
+            If InStr(entry, transitionWords(j)) > 0 Then
+                subParts = Split(entry, transitionWords(j))
+                result.Name = Trim(subParts(0))
+                If UBound(subParts) > 0 Then
+                    result.state = Trim(subParts(1))
+                End If
+                processed = True
+                Exit For
+            End If
+        Next j
+    End If
+    
+    ' Priority 3: Known state keywords
+    If Not processed Then
+        For j = LBound(stateKeywords) To UBound(stateKeywords)
+            If InStr(LCase(entry), stateKeywords(j)) > 0 Then
+                result.state = stateKeywords(j)
+                result.Name = Trim(Replace(entry, stateKeywords(j), ""))
+                processed = True
+                Exit For
+            End If
+        Next j
+    End If
+
+UpdateVar:
+    Set ProcessLine = result
+End Function
