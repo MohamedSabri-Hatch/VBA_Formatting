@@ -19,3 +19,30 @@
 # ⚠️ Known Limitations
 # Header-based name extraction is not yet implemented
 # Manual input prompts are currently disabled for streamlined automation
+
+🔧 Functional Improvements in Sub FormatCPKCTable_Basic_AlignedPr.txt
+User Prompts:
+
+Now use 1-based indexing (e.g., options start at 1 instead of 0).
+Prompts are clearer and more user-friendly.
+Header Handling:
+
+Uses a headerCell object to track header names and flags.
+More robust than the simple Boolean flag used in the base version.
+Variable & State Tracking:
+
+Tracks variables by column letter when headers are present.
+Better handling of state changes and formatting.
+State Comparison Logic:
+
+Improved logic to avoid bolding empty or unchanged states.
+More structured and maintainable.
+🧱 Organizational Enhancements
+Modular Design:
+Functions are more clearly separated and reusable.
+
+Cleaner Code:
+Redundant or unclear logic has been refactored.
+
+Better Comments:
+Inline comments are more descriptive and guide future development.
