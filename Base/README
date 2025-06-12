@@ -46,3 +46,6 @@
 
   Better Comments:
     Inline comments are more descriptive and guide future development.
+
+    v1.0 --> v1.1
+      priority queue for state and name extraction replaces get consensus with dialogue box code.
