@@ -51,7 +51,7 @@
       priority queue for state and name extraction replaces get consensus with dialogue box code.
 
 🧠 Functional Core Logic Updates between versions 1.1 -> 2.0
-      # No Updates
+      # This code actually goes into spreadsheet and bolds state changes appropriately!!
 
 🧬 Extraction Logic
       # Removed Slash-separated states (e.g., ON/OFF)
