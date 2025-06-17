@@ -49,3 +49,15 @@
 
     v1.0 --> v1.1
       priority queue for state and name extraction replaces get consensus with dialogue box code.
+
+🧠 Functional Core Logic Updates between versions 1.1 -> 2.0
+      # No Updates
+
+🧬 Extraction Logic
+      # Removed Slash-separated states (e.g., ON/OFF)
+      # Uses a dictionary (variableMap) to store AND COMPARE PREVIOUS STATES (removed existing state var).
+      # New create object function allows pass by value to dictionaries
+
+⚠️ Known Limitations
+      # Bracket logic bolding is excluded and planned for next release.
+      # Code in/out bolding is planned for next release.
